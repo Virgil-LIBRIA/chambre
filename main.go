@@ -18,6 +18,7 @@ import (
 
 	"github.com/Virgil-LIBRIA/chambre/data"
 	"github.com/Virgil-LIBRIA/chambre/search"
+	"github.com/Virgil-LIBRIA/chambre/server"
 	"github.com/Virgil-LIBRIA/chambre/tui"
 	"github.com/Virgil-LIBRIA/chambre/vm"
 )
@@ -144,7 +145,22 @@ func runSearchDirect(query string, modeOpt ...string) {
 }
 
 func runServe() {
-	fmt.Println("chambre serve — pas encore implémenté")
+	port := 5002
+	if len(os.Args) > 2 {
+		if p, err := fmt.Sscanf(os.Args[2], "%d", &port); p == 0 || err != nil {
+			port = 5002
+		}
+	}
+	corpus, err := loadCorpus()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "erreur chargement: %v\n", err)
+		os.Exit(1)
+	}
+	srv := server.New(corpus, port)
+	if err := srv.Run(); err != nil {
+		fmt.Fprintf(os.Stderr, "erreur serveur: %v\n", err)
+		os.Exit(1)
+	}
 }
 
 func runTUI() {
