@@ -18,6 +18,7 @@ import (
 
 	"github.com/Virgil-LIBRIA/chambre/data"
 	"github.com/Virgil-LIBRIA/chambre/search"
+	"github.com/Virgil-LIBRIA/chambre/tui"
 	"github.com/Virgil-LIBRIA/chambre/vm"
 )
 
@@ -147,8 +148,15 @@ func runServe() {
 }
 
 func runTUI() {
-	fmt.Println("chambre tui — pas encore implémenté")
-	fmt.Println("utilise: chambre search <query>")
+	corpus, err := loadCorpus()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "erreur chargement: %v\n", err)
+		os.Exit(1)
+	}
+	if err := tui.Run(corpus); err != nil {
+		fmt.Fprintf(os.Stderr, "erreur TUI: %v\n", err)
+		os.Exit(1)
+	}
 }
 
 func runPulse() {

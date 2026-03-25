@@ -22,10 +22,14 @@ type Corpus struct {
 
 // Kernel est le graphe de concepts.
 type Kernel struct {
-	Noeuds map[string]Concept `json:"noeuds"`
-	Liens  []KernelLien       `json:"liens"`
-	Iles   []Ile              `json:"iles"`
-	Stats  KernelStats        `json:"stats"`
+	Noeuds map[string]Concept    `json:"noeuds"`
+	Liens  []KernelLien          `json:"liens"`
+	Iles   map[string]IleRaw     `json:"iles"`
+	Stats  KernelStats           `json:"stats"`
+}
+
+type IleRaw struct {
+	Concepts []string `json:"concepts"`
 }
 
 type KernelLien struct {
@@ -35,8 +39,8 @@ type KernelLien struct {
 }
 
 type Ile struct {
-	Nom     string   `json:"nom"`
-	Membres []string `json:"membres"`
+	Nom      string   `json:"nom"`
+	Concepts []string `json:"concepts"`
 }
 
 type KernelStats struct {
