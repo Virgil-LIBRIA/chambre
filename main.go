@@ -1,12 +1,11 @@
-// chambre — moteur de résonance sémantique pour le corpus Point Zéro.
+// chambre — moteur de resonance semantique generique.
 //
 // Usage:
-//   chambre              TUI interactive (défaut)
-//   chambre search "q"   recherche one-shot
-//   chambre serve        serveur HTTP (API REST)
-//   chambre build        reconstruit le kernel
-//   chambre pulse        maintenance (GC + sédimentation)
-//   chambre version      affiche la version
+//   chambre [--workspace <path>]              TUI interactive (defaut)
+//   chambre [--workspace <path>] search "q"   recherche one-shot
+//   chambre [--workspace <path>] serve        serveur HTTP (API REST)
+//   chambre [--workspace <path>] pulse        maintenance (GC + sedimentation)
+//   chambre version                           affiche la version
 package main
 
 import (
@@ -23,51 +22,84 @@ import (
 	"github.com/Virgil-LIBRIA/chambre/vm"
 )
 
-const version = "0.1.0"
+const version = "0.2.0"
+
+var workspacePath string
 
 func main() {
+	args := os.Args[1:]
+
+	// Extraire --workspace avant la sous-commande
+	var filtered []string
+	for i := 0; i < len(args); i++ {
+		if (args[i] == "--workspace" || args[i] == "-w") && i+1 < len(args) {
+			workspacePath = args[i+1]
+			i++ // skip value
+		} else {
+			filtered = append(filtered, args[i])
+		}
+	}
+
 	cmd := "tui"
-	if len(os.Args) > 1 {
-		cmd = os.Args[1]
+	if len(filtered) > 0 {
+		cmd = filtered[0]
 	}
 
 	switch cmd {
 	case "version", "--version", "-v":
 		fmt.Printf("chambre %s\n", version)
 	case "search", "s":
-		runSearch()
+		runSearch(filtered)
 	case "serve":
-		runServe()
+		runServe(filtered)
 	case "pulse":
 		runPulse()
 	case "tui":
 		runTUI()
 	default:
 		// Si pas de sous-commande connue, traiter comme recherche
-		runSearchDirect(strings.Join(os.Args[1:], " "))
+		runSearchDirect(strings.Join(filtered, " "))
 	}
 }
 
 func loadCorpus() (*data.Corpus, error) {
-	// Cherche les données dans le dossier chambre_reverberante existant
-	base := filepath.Join(filepath.Dir(os.Args[0]), "..", "chambre_reverberante")
-	// Fallback : chemin absolu
-	if _, err := os.Stat(filepath.Join(base, "kernel_pz.json")); err != nil {
-		base = `C:\Users\VISION\Documents\Projets\chambre_reverberante`
+	// 1. Flag --workspace explicite
+	if workspacePath != "" {
+		return data.Load(workspacePath)
 	}
+
+	// 2. Variable d'environnement CHAMBRE_WORKSPACE
+	if env := os.Getenv("CHAMBRE_WORKSPACE"); env != "" {
+		return data.Load(env)
+	}
+
+	// 3. workspace.json dans le repertoire courant
+	if _, err := os.Stat("workspace.json"); err == nil {
+		cwd, _ := os.Getwd()
+		return data.Load(cwd)
+	}
+
+	// 4. Dossier frere chambre_reverberante (legacy)
+	base := filepath.Join(filepath.Dir(os.Args[0]), "..", "chambre_reverberante")
+	if _, err := os.Stat(filepath.Join(base, "kernel_pz.json")); err == nil {
+		return data.Load(base)
+	}
+
+	// 5. Fallback : chemin legacy absolu
+	base = `C:\Users\VISION\Documents\Projets\chambre_reverberante`
 	return data.Load(base)
 }
 
-func runSearch() {
-	if len(os.Args) < 3 {
+func runSearch(args []string) {
+	if len(args) < 2 {
 		fmt.Fprintln(os.Stderr, "usage: chambre search <query> [--mode default]")
 		os.Exit(1)
 	}
-	query := os.Args[2]
+	query := args[1]
 	mode := "default"
-	for i, arg := range os.Args[3:] {
-		if arg == "--mode" && i+3+1 < len(os.Args) {
-			mode = os.Args[i+3+1]
+	for i, arg := range args[2:] {
+		if arg == "--mode" && i+2+1 < len(args) {
+			mode = args[i+2+1]
 		}
 	}
 	runSearchDirect(query, mode)
@@ -144,10 +176,10 @@ func runSearchDirect(query string, modeOpt ...string) {
 	fmt.Println()
 }
 
-func runServe() {
+func runServe(args []string) {
 	port := 5002
-	if len(os.Args) > 2 {
-		if p, err := fmt.Sscanf(os.Args[2], "%d", &port); p == 0 || err != nil {
+	if len(args) > 1 {
+		if p, err := fmt.Sscanf(args[1], "%d", &port); p == 0 || err != nil {
 			port = 5002
 		}
 	}

@@ -2,6 +2,7 @@ package tui
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
@@ -41,6 +42,9 @@ type Model struct {
 	err         error
 	history     []string
 
+	// Modes dynamiques
+	modeNames []string
+
 	// Concept explorer
 	concept     *data.Concept
 	conceptPath []string
@@ -59,7 +63,7 @@ type searchDoneMsg struct {
 
 type errMsg struct{ err error }
 
-// New crée le modèle TUI.
+// New cree le modele TUI.
 func New(corpus *data.Corpus) Model {
 	ti := textinput.New()
 	ti.Placeholder = "Interroger le corpus..."
@@ -71,12 +75,34 @@ func New(corpus *data.Corpus) Model {
 	ti.PlaceholderStyle = lipgloss.NewStyle().Foreground(colorBrume)
 	ti.Prompt = "  > "
 
+	// Configurer les couleurs piliers depuis le workspace
+	if len(corpus.Piliers) > 0 {
+		colors := make(map[string]string, len(corpus.Piliers))
+		for name, cfg := range corpus.Piliers {
+			if cfg.Color != "" {
+				colors[name] = cfg.Color
+			}
+		}
+		if len(colors) > 0 {
+			SetPilierColors(colors)
+		}
+	}
+
+	// Charger les noms de modes depuis le corpus
+	modeNames := make([]string, 0, len(corpus.Modes))
+	for name := range corpus.Modes {
+		modeNames = append(modeNames, name)
+	}
+	// Trier pour un ordre stable
+	sort.Strings(modeNames)
+
 	return Model{
-		engine: search.New(corpus),
-		vm:     vm.New(corpus),
-		corpus: corpus,
-		input:  ti,
-		mode:   "default",
+		engine:    search.New(corpus),
+		vm:        vm.New(corpus),
+		corpus:    corpus,
+		input:     ti,
+		mode:      "default",
+		modeNames: modeNames,
 	}
 }
 
@@ -116,11 +142,10 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 
 		case "tab":
-			// Cycle modes
-			modes := []string{"default", "daisy", "dayz", "translucide", "vibratoire", "silence_actif"}
-			for i, mode := range modes {
+			// Cycle modes (dynamiques depuis le workspace)
+			for i, mode := range m.modeNames {
 				if mode == m.mode {
-					m.mode = modes[(i+1)%len(modes)]
+					m.mode = m.modeNames[(i+1)%len(m.modeNames)]
 					break
 				}
 			}
@@ -249,7 +274,11 @@ func (m Model) View() string {
 // --- Renderers ---
 
 func (m Model) renderHeader() string {
-	title := styleTitle.Render("Chambre Reverberante")
+	name := "Chambre Reverberante"
+	if m.corpus.Name != "" && m.corpus.Name != "Legacy" {
+		name = m.corpus.Name
+	}
+	title := styleTitle.Render(name)
 	stats := styleSubtitle.Render(fmt.Sprintf(
 		"%d termes | %d fichiers | %d embeddings",
 		len(m.corpus.Glossaire),
@@ -260,9 +289,8 @@ func (m Model) renderHeader() string {
 }
 
 func (m Model) renderModeBar() string {
-	modes := []string{"default", "daisy", "dayz", "translucide", "vibratoire", "silence_actif"}
 	var parts []string
-	for _, mode := range modes {
+	for _, mode := range m.modeNames {
 		label := mode
 		if mode == m.mode {
 			parts = append(parts, styleGlossaire.Render("["+label+"]"))

@@ -52,7 +52,11 @@ func (s *Server) Run() error {
 	mux.HandleFunc("GET /vm/recall/{what}", s.vmRecall)
 
 	addr := fmt.Sprintf("127.0.0.1:%d", s.port)
-	fmt.Printf("  Chambre Reverberante — http://%s\n", addr)
+	name := "Chambre"
+	if s.corpus.Name != "" && s.corpus.Name != "Legacy" {
+		name = s.corpus.Name
+	}
+	fmt.Printf("  %s — http://%s\n", name, addr)
 	fmt.Printf("  %d termes | %d fichiers | %d embeddings\n\n",
 		len(s.corpus.Glossaire), len(s.corpus.SearchCache), len(s.corpus.Embeddings))
 

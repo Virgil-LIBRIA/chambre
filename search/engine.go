@@ -56,9 +56,9 @@ func (e *Engine) buildStemIndex() {
 
 // Reverberate exécute les 3 temps de la résonance.
 func (e *Engine) Reverberate(query, mode string, topK int, kvm *vm.VM) data.Reverberation {
-	m, ok := data.Modes[mode]
+	m, ok := e.corpus.Modes[mode]
 	if !ok {
-		m = data.Modes["default"]
+		m = e.corpus.Modes["default"]
 	}
 	seuil := data.Seuil(m.G, m.NSpin)
 

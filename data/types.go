@@ -72,21 +72,23 @@ type VMContext struct {
 	Ticks       int      `json:"ticks"`
 }
 
-// Mode INTemple avec ses paramètres.
+// Mode de recherche avec ses paramètres.
 type Mode struct {
 	Nom   string
 	G     float64
 	NSpin float64
 }
 
-// Modes prédéfinis du protocole INTemple v4.5.
-var Modes = map[string]Mode{
-	"silence_actif": {Nom: "silence_actif", G: 1.0, NSpin: 0.1},
-	"dayz":          {Nom: "dayz", G: 1.0, NSpin: 0.2},
-	"default":       {Nom: "default", G: 0.5, NSpin: 0.5},
-	"translucide":   {Nom: "translucide", G: 0.5, NSpin: 0.5},
-	"daisy":         {Nom: "daisy", G: 0.1, NSpin: 0.8},
-	"vibratoire":    {Nom: "vibratoire", G: 0.3, NSpin: 0.9},
+// DefaultModes retourne les modes par defaut si le workspace n'en definit pas.
+func DefaultModes() map[string]Mode {
+	return map[string]Mode{
+		"silence_actif": {Nom: "silence_actif", G: 1.0, NSpin: 0.1},
+		"dayz":          {Nom: "dayz", G: 1.0, NSpin: 0.2},
+		"default":       {Nom: "default", G: 0.5, NSpin: 0.5},
+		"translucide":   {Nom: "translucide", G: 0.5, NSpin: 0.5},
+		"daisy":         {Nom: "daisy", G: 0.1, NSpin: 0.8},
+		"vibratoire":    {Nom: "vibratoire", G: 0.3, NSpin: 0.9},
+	}
 }
 
 // Seuil calcule le seuil de pertinence selon G et n_spin.

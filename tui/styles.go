@@ -72,24 +72,57 @@ var (
 			Width(80)
 )
 
-// pilierStyle retourne le style coloré pour un pilier.
-func pilierStyle(pilier string) lipgloss.Style {
-	var fg lipgloss.Color
-	switch pilier {
-	case "PZ":
-		fg = colorOr
-	case "ETH":
-		fg = colorTurquoise
-	case "GQ":
-		fg = colorCobalt
-	case "CONSCIENCE", "CSC":
-		fg = colorPrune
-	case "INT":
-		fg = colorRouge
-	case "OSS":
-		fg = colorVert
-	default:
-		fg = colorArgent
+// pilierColors stocke les couleurs dynamiques chargees depuis le workspace.
+var pilierColors map[string]lipgloss.Color
+
+// SetPilierColors configure les couleurs depuis la config workspace.
+func SetPilierColors(piliers map[string]string) {
+	pilierColors = make(map[string]lipgloss.Color, len(piliers))
+	for name, color := range piliers {
+		pilierColors[name] = lipgloss.Color(color)
 	}
-	return lipgloss.NewStyle().Foreground(fg)
+}
+
+// palette de secours si le workspace ne definit pas de couleurs
+var defaultPilierColors = map[string]lipgloss.Color{
+	"PZ":         colorOr,
+	"ETH":        colorTurquoise,
+	"GQ":         colorCobalt,
+	"CONSCIENCE": colorPrune,
+	"CSC":        colorPrune,
+	"INT":        colorRouge,
+	"OSS":        colorVert,
+}
+
+// pilierStyle retourne le style colore pour un pilier.
+func pilierStyle(pilier string) lipgloss.Style {
+	// 1. Couleurs dynamiques du workspace
+	if pilierColors != nil {
+		if fg, ok := pilierColors[pilier]; ok {
+			return lipgloss.NewStyle().Foreground(fg)
+		}
+	}
+	// 2. Couleurs par defaut
+	if fg, ok := defaultPilierColors[pilier]; ok {
+		return lipgloss.NewStyle().Foreground(fg)
+	}
+	// 3. Auto-couleur basee sur le hash du nom
+	return lipgloss.NewStyle().Foreground(autoColor(pilier))
+}
+
+// autoColor genere une couleur deterministe pour un pilier inconnu.
+func autoColor(name string) lipgloss.Color {
+	// Palette de 8 couleurs distinctes pour les piliers auto-detectes
+	palette := []string{
+		"#c9a84c", "#4a9b8e", "#3d6fa8", "#7a4a8e",
+		"#9e4a4a", "#5a9e5a", "#b87333", "#8b6c9e",
+	}
+	h := 0
+	for _, c := range name {
+		h = h*31 + int(c)
+	}
+	if h < 0 {
+		h = -h
+	}
+	return lipgloss.Color(palette[h%len(palette)])
 }
