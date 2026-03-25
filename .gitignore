@@ -1,0 +1,16 @@
+# Binaires
+chambre
+chambre.exe
+*.exe
+
+# Données locales (pas dans le repo, spécifiques à chaque machine)
+*.cache.json
+kernel_memory.json
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+Thumbs.db
+.DS_Store
