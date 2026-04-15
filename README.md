@@ -1,6 +1,17 @@
 # Chambre — Moteur de Resonance Semantique (Go)
 
-> **Strate : S2 Operationnel** | **Version : 0.2.0** | **Depot : github.com/Virgil-LIBRIA/chambre (prive)**
+> **Strate : S2 Operationnel** | **Version : 0.2.0** | **Depot : github.com/Virgil-LIBRIA/chambre (public)**
+
+> **Note sur la famille "Chambre"** — ce repo contient la reimplementation
+> Go generique (binaire unique portable). Une version Python active avec les
+> embeddings du corpus source et le bridge MCP pour Claude Code est
+> maintenue separement, en repo prive, pour des raisons de confidentialite
+> des donnees d'ingestion. Les deux implementations sont compatibles sur
+> les endpoints HTTP REST (`/reverberate`, `/intempt`, `/health`).
+>
+> Le `mcp_server.py` present dans ce repo est une archive de l'etat au
+> 2026-04-04 du bridge MCP — la version active (avec guard singleton socket)
+> vit avec le reste du code Python dans le repo prive.
 
 ## Role
 
